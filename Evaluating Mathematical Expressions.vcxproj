@@ -130,6 +130,9 @@
     <ClCompile Include="Evaluating Mathematical Expressions.cpp" />
     <ClCompile Include="InfixToPostfixConverter.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="RpnData.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

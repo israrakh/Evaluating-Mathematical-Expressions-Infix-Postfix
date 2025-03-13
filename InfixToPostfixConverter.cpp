@@ -1,139 +1,113 @@
-//Infix to Postfix Converter Class
+//Postfix Evaluator Class
 
 #include <iostream>
 #include <stack>
 #include <cctype>
 #include <stdexcept>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
-class InfixToPostfixConverter {
+class PostfixEvaluator {
 private:
-	string infix; //For storing infix input
-	string postfix; //For storing converted postfix
+	string postfix;
+	double res; //For results
 
-	//Function to determine the precedence of operators
-	int precedence(char oper) {
-		if (oper == '+' || oper == '-') {
-			return 1;
-		}
-		else if (oper == '*' || oper == '/') {
-			return 2;
-		}
-		else {
-			return 0;
-		}
-	}
-
-	//Function for checking if a character is an operator or not
-	bool isOperator(char c) {
-		return (c == '+' || c == '-' || c == '*' || c == '/');
+	//Function to check if a string represents a number or not
+	bool isNumber(const string& str) {
+		return !str.empty() && (isdigit(str[0]) || (str[0] == '-' && str.size() > 1));
 	}
 
 public:
+	//Default constructor
+	PostfixEvaluator() : postfix(""), res(0.0) {}
 
-	//Default constructor:
-	InfixToPostfixConverter() : infix(""), postfix("") {}
-
-	//Parameterized constructor: initializing with an infix
-	InfixToPostfixConverter(const string& exp) {
-		setInfix(exp);
+	//Parameterized constructor
+	PostfixEvaluator(const string& exp) {
+		setPostfix(exp);
 	}
 
-	//Setter for infix
-	void setInfix(const string& exp) {
-		infix = exp;
-		postfix = "";
+	//Setter for postfix
+	void setPostfix(const string& exp) {
+		postfix = exp;
+		res = 0; //Before evaluation
 	}
 
-	//Getter for postfix
-	string getPostfix() const {
-		return postfix;
+	//Getter for result
+	double getResult() const {
+		return res;
 	}
 
-	//Converting an infix to postfix expression
-	void converter() {
-		stack<char> oprStack; //Stack to hold operators
-		postfix = ""; //clearing the previous one
+	//Function for evaluating postfix using a stack
+	void evaluatePostfix() {
+		stack<double> evaStack;
+		stringstream ss(postfix);
+		string token;
 
-		for (size_t i = 0; i < infix.length(); i++) {
-			char c = infix[i];
+		while (ss >> token) {
+			//If is a number push onto the stack
+			if (isNumber(token)) {
+				evaStack.push(stod(token));
+			}
+			else if (token == "+" || token == "-" || token == "*" || token == "/") { //if the token is an operator then perform computation
+				if (evaStack.size() < 2) {
+					throw invalid_argument("Not enough operands!");
+				}
 
-			//Skip if whitespace
-			if (isspace(c)) {
-				continue;
-			}
+				double a = evaStack.top(); evaStack.pop();
+				double b = evaStack.top(); evaStack.pop();
 
-			//If the character is an operand adding it to postfix
-			if (isalnum(c)) {
-				postfix += c;
-			}
-			else if (c == '(') { //If it is an openning parenthesis
-				oprStack.push(c);
-			}
-			else if (c == ')') { //If it is a closing parenthesis
-				while (!oprStack.empty() && oprStack.top() != '(') {
-					postfix += oprStack.top();
-					oprStack.pop();
+				if (token == "+") {
+					evaStack.push(a + b);
 				}
-				if (!oprStack.empty()) {
-					oprStack.pop(); //Remove the '(' from stack
+				else if (token == "-") {
+					evaStack.push(a - b);
 				}
-				else {
-					throw invalid_argument("Mismatched parenthesis in the expression!");
+				else if (token == "*") {
+					evaStack.push(a * b);
 				}
-			}
-			else if (isOperator(c)) { //If character is an operator
-				while (!oprStack.empty() && precedence(oprStack.top()) >= precedence(c)) {
-					postfix += oprStack.top();
-					oprStack.pop();
+				else if (token == "/") {
+					if (b == 0) {
+						throw invalid_argument("Error: Division by zero!");
+						evaStack.push(a / b);
+					}
 				}
-				oprStack.push(c); //Pushing the current operator into the stack
 			}
 			else {
-				throw invalid_argument("Invalid character! " + string(1, c));
+				throw invalid_argument("Invalid token: " + token);
 			}
 		}
-
-		//Popping the remaining operators and adding it to postfix
-		while (!oprStack.empty()) {
-			if (oprStack.top() == '(') {
-				throw invalid_argument("Mismatched parenthesis!");
-			}
-			postfix += oprStack.top();
-			oprStack.pop();
+		//One result should be exaclty left in stack
+		if (evaStack.size() != 1) {
+			throw invalid_argument("Too many operands!");
 		}
+		res = evaStack.top();
 	}
 };
 
 //Main program
 
 int main() {
-	try {
-		//Test case 1
-		InfixToPostfixConverter input1("1+2*4");
-		input1.converter();
-		cout << "Infix: 1+2*4\nPostfix: " << input1.getPostfix() << endl;
-
-		//Test case 2, with parenthesis
-		InfixToPostfixConverter input2("(1+2)*4");
-		input2.converter();
-		cout << "\nInfix: (1+2)*4\nPostfix: " << input2.getPostfix() << endl;
-
-		//Test case 3
-		InfixToPostfixConverter input3("2+2*(4-2)/4");
-		input3.converter();
-		cout << "\nInfix: 2+2*(4-2)/4\nPostfix: " << input3.getPostfix() << endl;
-
-		//Test case 4, with mismatched parenthesis
-		InfixToPostfixConverter input4("2+2)*3");
-		input4.converter();
-		cout << "\nInfix: 2+2)*3\nPostfix: " << input4.getPostfix() << endl;
-
+	ifstream openFile("RpnData.txt"); //To open the file
+	if (!openFile) {
+		cerr << "Error: Unable to open the RpnData.txt file!" << endl;
+		return 1;
 	}
-	catch (const exception& e) {
-		cout << "\nError: " << e.what() << endl;
+
+	string line;
+	while (getline(openFile, line)) {
+		try {
+			PostfixEvaluator evaluator(line);
+			evaluator.evaluatePostfix();
+			cout << "Postfix: " << line << " => Result: " << evaluator.getResult() << endl;
+		}
+		catch (const exception& e) {
+			cout << "Postfix: " << line << " => Error: " << e.what() << endl;
+		}
 	}
+
+	openFile.close();
 
 	return 0;
 }
