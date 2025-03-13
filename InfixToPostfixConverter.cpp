@@ -52,26 +52,26 @@ public:
 			}
 			else if (token == "+" || token == "-" || token == "*" || token == "/") { //if the token is an operator then perform computation
 				if (evaStack.size() < 2) {
-					throw invalid_argument("Not enough operands!");
+					throw invalid_argument("Not enough operands before operator  '" + token + "'");
 				}
 
-				double a = evaStack.top(); evaStack.pop();
 				double b = evaStack.top(); evaStack.pop();
+				double a = evaStack.top(); evaStack.pop();
 
 				if (token == "+") {
-					evaStack.push(a + b);
+					evaStack.push(b + a);
 				}
 				else if (token == "-") {
-					evaStack.push(a - b);
+					evaStack.push(b - a);
 				}
 				else if (token == "*") {
-					evaStack.push(a * b);
+					evaStack.push(b * a);
 				}
 				else if (token == "/") {
 					if (b == 0) {
 						throw invalid_argument("Error: Division by zero!");
-						evaStack.push(a / b);
 					}
+					evaStack.push(b / b);
 				}
 			}
 			else {
