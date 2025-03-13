@@ -59,19 +59,19 @@ public:
 				double a = evaStack.top(); evaStack.pop();
 
 				if (token == "+") {
-					evaStack.push(b + a);
+					evaStack.push(a + b);
 				}
 				else if (token == "-") {
-					evaStack.push(b - a);
+					evaStack.push(a - b);
 				}
 				else if (token == "*") {
-					evaStack.push(b * a);
+					evaStack.push(a * b);
 				}
 				else if (token == "/") {
 					if (b == 0) {
 						throw invalid_argument("Error: Division by zero!");
 					}
-					evaStack.push(b / b);
+					evaStack.push(a / b);
 				}
 			}
 			else {
